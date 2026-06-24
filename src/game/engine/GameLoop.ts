@@ -1,7 +1,12 @@
 import { InputManager } from './InputManager';
 import { Player } from '../entities/Player';
+import { Asteroid } from '../entities/Asteroid';
+import { Projectile } from '../entities/Projectile';
 import { Starfield } from '../systems/Starfield';
+import { ProceduralGeneration } from '../systems/ProceduralGeneration';
+import { checkCircleCollision } from '../utils/Collision';
 import { Vector2 } from '../utils/Vector2';
+import { useGameStore } from '@/store/useGameStore';
 
 export class GameLoop {
   private canvas: HTMLCanvasElement;
@@ -12,6 +17,10 @@ export class GameLoop {
   private inputManager: InputManager;
   private player: Player;
   private starfield: Starfield;
+  
+  private asteroids: Asteroid[] = [];
+  private projectiles: Projectile[] = [];
+  private proceduralGen: ProceduralGeneration;
 
   // Camera focuses on player
   private cameraPos: Vector2;
@@ -29,6 +38,7 @@ export class GameLoop {
     this.cameraPos = new Vector2(0, 0);
 
     this.starfield = new Starfield(canvas.width, canvas.height, 300);
+    this.proceduralGen = new ProceduralGeneration();
   }
 
   public resize(width: number, height: number) {
@@ -63,6 +73,50 @@ export class GameLoop {
 
   private update(dt: number) {
     this.player.update(dt, this.inputManager);
+    
+    this.player.shoot((pos, angle) => {
+      this.projectiles.push(new Projectile(pos.x, pos.y, angle));
+    }, dt, this.inputManager);
+
+    // Update projectiles
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const p = this.projectiles[i];
+      p.update(dt);
+      if (p.life <= 0) {
+        this.projectiles.splice(i, 1);
+      }
+    }
+
+    // Procedural Gen
+    this.proceduralGen.update(this.player.position, this.asteroids);
+
+    // Update asteroids and check collisions
+    for (let i = this.asteroids.length - 1; i >= 0; i--) {
+      const a = this.asteroids[i];
+      a.update(dt);
+      
+      // Check collision with projectiles
+      let destroyed = false;
+      for (let j = this.projectiles.length - 1; j >= 0; j--) {
+        const p = this.projectiles[j];
+        if (checkCircleCollision(a.position, a.radius, p.position, p.radius)) {
+          // Hit!
+          a.health -= p.damage;
+          this.projectiles.splice(j, 1); // destroy projectile
+          
+          if (a.health <= 0) {
+            destroyed = true;
+            break;
+          }
+        }
+      }
+      
+      if (destroyed) {
+        // Collect resource
+        useGameStore.getState().updateInventory(a.resourceType, a.resourceYield);
+        this.asteroids.splice(i, 1);
+      }
+    }
 
     // Update Camera to follow player smoothly or exactly
     // Here we make camera center on player exactly
@@ -81,6 +135,16 @@ export class GameLoop {
     // Apply Camera Transform for game world entities
     this.ctx.save();
     this.ctx.translate(-this.cameraPos.x, -this.cameraPos.y);
+
+    // Draw Asteroids
+    for (const a of this.asteroids) {
+      a.draw(this.ctx);
+    }
+
+    // Draw Projectiles
+    for (const p of this.projectiles) {
+      p.draw(this.ctx);
+    }
 
     // Draw Player
     this.player.draw(this.ctx);

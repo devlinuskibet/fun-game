@@ -3,6 +3,7 @@
 import { useGameStore } from '@/store/useGameStore';
 import MainMenu from '@/components/ui/MainMenu';
 import GameCanvas from '@/components/game/GameCanvas';
+import HUD from '@/components/ui/HUD';
 
 export default function Home() {
   const gameState = useGameStore((state) => state.gameState);
@@ -17,11 +18,8 @@ export default function Home() {
           Actually, rendering UI over the canvas is better for background effects in the menu. 
           Let's mount canvas always, but have it react to gameState. */}
       
-      {gameState === 'PLAYING' && (
-         <div className="absolute top-4 left-4 z-20 text-white font-mono bg-black/50 p-2 rounded">
-           HUD Placeholder - Playing
-         </div>
-      )}
+      
+      <HUD />
 
       {/* The game canvas itself */}
       <GameCanvas />

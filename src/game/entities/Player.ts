@@ -21,6 +21,9 @@ export class Player {
   private friction: number = 0.98; // applied per frame, could be time based
 
   private engineParticles: Particle[] = [];
+  
+  private shootCooldown: number = 0;
+  private shootRate: number = 0.2; // seconds between shots
 
   constructor(x: number, y: number) {
     this.position = new Vector2(x, y);
@@ -66,6 +69,22 @@ export class Player {
       this.emitEngineParticles();
     }
     this.updateParticles(dt);
+  }
+
+  public shoot(onShoot: (pos: Vector2, angle: number) => void, dt: number, input: InputManager) {
+    if (this.shootCooldown > 0) {
+      this.shootCooldown -= dt;
+    }
+
+    if (input.isKeyDown('KeyE') || input.isKeyDown('Enter')) {
+      if (this.shootCooldown <= 0) {
+        // Shoot from the nose of the ship
+        const noseX = this.position.x + Math.cos(this.rotation) * 20;
+        const noseY = this.position.y + Math.sin(this.rotation) * 20;
+        onShoot(new Vector2(noseX, noseY), this.rotation);
+        this.shootCooldown = this.shootRate;
+      }
+    }
   }
 
   private emitEngineParticles() {
