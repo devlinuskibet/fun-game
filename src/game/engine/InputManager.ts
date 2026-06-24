@@ -30,10 +30,12 @@ export class InputManager {
 
   private handleKeyDown = (e: KeyboardEvent) => {
     this.keys[e.code] = true;
+    this.keys[e.key] = true; // Fallback for older browsers or specific laptop keyboards
   };
 
   private handleKeyUp = (e: KeyboardEvent) => {
     this.keys[e.code] = false;
+    this.keys[e.key] = false;
   };
 
   public isKeyDown(code: string): boolean {

@@ -88,12 +88,15 @@ export class GameLoop {
       return;
     }
 
+    const speedMult = store.stats.speedMultiplier ?? 1;
+    const dmgMult = store.stats.damageMultiplier ?? 1;
+
     const worldMousePos = this.cameraPos.add(this.inputManager.mousePos);
-    this.player.update(dt, this.inputManager, worldMousePos, store.stats.speedMultiplier);
+    this.player.update(dt, this.inputManager, worldMousePos, speedMult);
     
     this.player.shoot((pos, angle) => {
       const p = new Projectile(pos.x, pos.y, angle, 800, false);
-      p.damage *= store.stats.damageMultiplier;
+      p.damage *= dmgMult;
       this.projectiles.push(p);
       audioManager.playLaser();
     }, dt, this.inputManager);

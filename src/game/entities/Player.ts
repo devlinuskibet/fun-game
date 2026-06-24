@@ -32,28 +32,27 @@ export class Player {
   }
 
   public update(dt: number, input: InputManager, worldMousePos: Vector2, speedMultiplier: number = 1) {
-    // Rotation towards mouse
-    const dirToMouse = worldMousePos.sub(this.position);
-    this.rotation = Math.atan2(dirToMouse.y, dirToMouse.x);
+    // Rotation
+    if (input.isKeyDown('ArrowLeft') || input.isKeyDown('Left') || input.isKeyDown('a') || input.isKeyDown('A') || input.isKeyDown('KeyA')) {
+      this.rotation -= this.rotationSpeed * dt;
+    }
+    if (input.isKeyDown('ArrowRight') || input.isKeyDown('Right') || input.isKeyDown('d') || input.isKeyDown('D') || input.isKeyDown('KeyD')) {
+      this.rotation += this.rotationSpeed * dt;
+    }
 
-    // Thrust (Directional WASD)
-    let moveDir = new Vector2(0, 0);
-    if (input.isKeyDown('KeyA') || input.isKeyDown('ArrowLeft')) moveDir.x -= 1;
-    if (input.isKeyDown('KeyD') || input.isKeyDown('ArrowRight')) moveDir.x += 1;
-    if (input.isKeyDown('KeyW') || input.isKeyDown('ArrowUp')) moveDir.y -= 1;
-    if (input.isKeyDown('KeyS') || input.isKeyDown('ArrowDown')) moveDir.y += 1;
-
+    // Thrust
     let isThrusting = false;
-    if (moveDir.mag() > 0) {
-      this.acceleration = moveDir.normalize().mult(this.thrustPower * speedMultiplier);
+    
+    if (input.isKeyDown('ArrowUp') || input.isKeyDown('Up') || input.isKeyDown('w') || input.isKeyDown('W') || input.isKeyDown('KeyW')) {
+      const thrust = new Vector2(Math.cos(this.rotation), Math.sin(this.rotation));
+      this.acceleration = thrust.mult(this.thrustPower * speedMultiplier);
+      isThrusting = true;
+    } else if (input.isKeyDown('ArrowDown') || input.isKeyDown('Down') || input.isKeyDown('s') || input.isKeyDown('S') || input.isKeyDown('KeyS')) {
+      const thrust = new Vector2(Math.cos(this.rotation), Math.sin(this.rotation));
+      this.acceleration = thrust.mult(-this.thrustPower * 0.5 * speedMultiplier); // reverse slower
       isThrusting = true;
     } else {
       this.acceleration = new Vector2(0, 0);
-    }
-
-    // Apply Boost
-    if (isThrusting && input.isKeyDown('Space')) {
-      this.acceleration = this.acceleration.mult(2);
     }
 
     // Physics integration
@@ -61,7 +60,7 @@ export class Player {
     
     // Apply friction (space drifting)
     this.velocity = this.velocity.mult(Math.pow(this.friction, dt * 60)); 
-    this.velocity = this.velocity.limit(input.isKeyDown('Space') ? this.topSpeed * 1.5 : this.topSpeed);
+    this.velocity = this.velocity.limit(this.topSpeed * speedMultiplier);
 
     this.position = this.position.add(this.velocity.mult(dt));
 
@@ -77,7 +76,7 @@ export class Player {
       this.shootCooldown -= dt;
     }
 
-    if (input.isKeyDown('KeyE') || input.isKeyDown('Enter') || input.isMouseDown) {
+    if (input.isKeyDown('Space') || input.isKeyDown(' ') || input.isKeyDown('KeyE') || input.isKeyDown('e') || input.isKeyDown('E') || input.isKeyDown('Enter') || input.isMouseDown) {
       if (this.shootCooldown <= 0) {
         // Shoot from the nose of the ship
         const noseX = this.position.x + Math.cos(this.rotation) * 20;

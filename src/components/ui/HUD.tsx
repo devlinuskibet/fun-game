@@ -87,7 +87,7 @@ export default function HUD() {
         className="self-center mb-4 text-center glass-panel px-6 py-2 rounded-full"
       >
         <p className="text-xs font-mono text-white/60">
-          [W,A,S,D] Move • Mouse Aim • Click/E Shoot • Space Boost
+          [ARROWS] Move • [SPACE] Shoot • Mouse Aim Disabled
         </p>
       </motion.div>
     </div>
