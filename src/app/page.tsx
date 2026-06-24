@@ -5,9 +5,12 @@ import MainMenu from '@/components/ui/MainMenu';
 import GameCanvas from '@/components/game/GameCanvas';
 import HUD from '@/components/ui/HUD';
 import GameOver from '@/components/ui/GameOver';
+import UpgradeShop from '@/components/ui/UpgradeShop';
 
 export default function Home() {
   const gameState = useGameStore((state) => state.gameState);
+  const isShopOpen = useGameStore((state) => state.isShopOpen);
+  const setShopOpen = useGameStore((state) => state.setShopOpen);
 
   return (
     <main className="relative w-full h-screen overflow-hidden bg-background">
@@ -32,6 +35,9 @@ export default function Home() {
 
       {/* Game Over Screen */}
       {gameState === 'GAME_OVER' && <GameOver />}
+
+      {/* Upgrade Shop */}
+      {isShopOpen && <UpgradeShop onClose={() => setShopOpen(false)} />}
     </main>
   );
 }

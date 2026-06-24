@@ -2,6 +2,7 @@
 
 import { useGameStore } from '@/store/useGameStore';
 import { motion } from 'framer-motion';
+import { ShoppingCart } from 'lucide-react';
 
 export default function HUD() {
   const stats = useGameStore((state) => state.stats);
@@ -63,6 +64,20 @@ export default function HUD() {
             <li className="text-white/40 italic">Empty</li>
           )}
         </ul>
+
+        <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-2">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-white/70 font-bold">Credits</span>
+            <span className="text-accent font-mono font-bold">{inventory.credits} ¢</span>
+          </div>
+          <button
+            onClick={() => useGameStore.getState().setShopOpen(true)}
+            className="w-full py-2 bg-secondary/20 hover:bg-secondary/40 text-secondary rounded flex items-center justify-center gap-2 transition-colors font-bold tracking-widest text-xs"
+          >
+            <ShoppingCart size={14} />
+            UPGRADE SHOP
+          </button>
+        </div>
       </motion.div>
 
       {/* Bottom Center: Controls Hint */}
@@ -72,7 +87,7 @@ export default function HUD() {
         className="self-center mb-4 text-center glass-panel px-6 py-2 rounded-full"
       >
         <p className="text-xs font-mono text-white/60">
-          [W,A,S,D] Move • [SPACE] Boost • [E] Fire Laser • [ESC] Menu
+          [W,A,S,D] Move • Mouse Aim • Click/E Shoot • Space Boost
         </p>
       </motion.div>
     </div>

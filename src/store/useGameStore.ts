@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export type GameState = 'MENU' | 'PLAYING' | 'PAUSED' | 'GAME_OVER';
 
@@ -13,6 +14,9 @@ export interface PlayerStats {
   maxFuel: number;
   experience: number;
   level: number;
+  // Upgrades
+  damageMultiplier: number;
+  speedMultiplier: number;
 }
 
 export interface Inventory {
@@ -31,28 +35,39 @@ interface GameStore {
   inventory: Inventory;
   updateInventory: (resource: string, amount: number) => void;
   addCredits: (amount: number) => void;
+  spendCredits: (amount: number) => boolean;
+  buyUpgrade: (upgradeType: 'damage' | 'speed' | 'health' | 'shield') => boolean;
+  isShopOpen: boolean;
+  setShopOpen: (open: boolean) => void;
 }
 
-export const useGameStore = create<GameStore>((set) => ({
-  gameState: 'MENU',
-  setGameState: (state) => set({ gameState: state }),
+export const useGameStore = create<GameStore>()(
+  persist(
+    (set, get) => ({
+      gameState: 'MENU',
+      setGameState: (state) => set({ gameState: state }),
+      
+      isShopOpen: false,
+      setShopOpen: (open) => set({ isShopOpen: open }),
 
-  stats: {
-    health: 100,
-    maxHealth: 100,
-    shield: 100,
-    maxShield: 100,
-    energy: 100,
-    maxEnergy: 100,
-    fuel: 100,
-    maxFuel: 100,
-    experience: 0,
-    level: 1,
-  },
-  updateStats: (updates) =>
-    set((state) => ({
-      stats: { ...state.stats, ...updates },
-    })),
+      stats: {
+        health: 100,
+        maxHealth: 100,
+        shield: 100,
+        maxShield: 100,
+        energy: 100,
+        maxEnergy: 100,
+        fuel: 100,
+        maxFuel: 100,
+        experience: 0,
+        level: 1,
+        damageMultiplier: 1,
+        speedMultiplier: 1,
+      },
+      updateStats: (updates) =>
+        set((state) => ({
+          stats: { ...state.stats, ...updates },
+        })),
 
   inventory: {
     capacity: 50,
@@ -79,4 +94,44 @@ export const useGameStore = create<GameStore>((set) => ({
         credits: Math.max(0, state.inventory.credits + amount),
       },
     })),
-}));
+  spendCredits: (amount) => {
+    const state = get();
+    if (state.inventory.credits >= amount) {
+      set({
+        inventory: {
+          ...state.inventory,
+          credits: state.inventory.credits - amount,
+        },
+      });
+      return true;
+    }
+    return false;
+  },
+  buyUpgrade: (type) => {
+    const cost = 100; // Flat cost for prototype
+    const state = get();
+    if (state.inventory.credits >= cost) {
+      set({
+        inventory: { ...state.inventory, credits: state.inventory.credits - cost },
+        stats: {
+          ...state.stats,
+          damageMultiplier: type === 'damage' ? state.stats.damageMultiplier + 0.2 : state.stats.damageMultiplier,
+          speedMultiplier: type === 'speed' ? state.stats.speedMultiplier + 0.2 : state.stats.speedMultiplier,
+          maxHealth: type === 'health' ? state.stats.maxHealth + 20 : state.stats.maxHealth,
+          maxShield: type === 'shield' ? state.stats.maxShield + 20 : state.stats.maxShield,
+          // Heal when upgrading max health
+          health: type === 'health' ? state.stats.maxHealth + 20 : state.stats.health,
+          shield: type === 'shield' ? state.stats.maxShield + 20 : state.stats.shield,
+        }
+      });
+      return true;
+    }
+    return false;
+  }
+    }),
+    {
+      name: 'galaxy-salvager-storage',
+      partialize: (state) => ({ stats: state.stats, inventory: state.inventory }),
+    }
+  )
+);

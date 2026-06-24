@@ -31,23 +31,24 @@ export class Player {
     this.acceleration = new Vector2(0, 0);
   }
 
-  public update(dt: number, input: InputManager) {
-    // Rotation
-    if (input.isKeyDown('KeyA') || input.isKeyDown('ArrowLeft')) {
-      this.rotation -= this.rotationSpeed * dt;
-    }
-    if (input.isKeyDown('KeyD') || input.isKeyDown('ArrowRight')) {
-      this.rotation += this.rotationSpeed * dt;
-    }
+  public update(dt: number, input: InputManager, worldMousePos: Vector2, speedMultiplier: number = 1) {
+    // Rotation towards mouse
+    const dirToMouse = worldMousePos.sub(this.position);
+    this.rotation = Math.atan2(dirToMouse.y, dirToMouse.x);
 
-    // Thrust
-    this.acceleration = new Vector2(0, 0);
+    // Thrust (Directional WASD)
+    let moveDir = new Vector2(0, 0);
+    if (input.isKeyDown('KeyA') || input.isKeyDown('ArrowLeft')) moveDir.x -= 1;
+    if (input.isKeyDown('KeyD') || input.isKeyDown('ArrowRight')) moveDir.x += 1;
+    if (input.isKeyDown('KeyW') || input.isKeyDown('ArrowUp')) moveDir.y -= 1;
+    if (input.isKeyDown('KeyS') || input.isKeyDown('ArrowDown')) moveDir.y += 1;
+
     let isThrusting = false;
-    
-    if (input.isKeyDown('KeyW') || input.isKeyDown('ArrowUp')) {
-      const thrust = new Vector2(Math.cos(this.rotation), Math.sin(this.rotation));
-      this.acceleration = thrust.mult(this.thrustPower);
+    if (moveDir.mag() > 0) {
+      this.acceleration = moveDir.normalize().mult(this.thrustPower * speedMultiplier);
       isThrusting = true;
+    } else {
+      this.acceleration = new Vector2(0, 0);
     }
 
     // Apply Boost
@@ -76,7 +77,7 @@ export class Player {
       this.shootCooldown -= dt;
     }
 
-    if (input.isKeyDown('KeyE') || input.isKeyDown('Enter')) {
+    if (input.isKeyDown('KeyE') || input.isKeyDown('Enter') || input.isMouseDown) {
       if (this.shootCooldown <= 0) {
         // Shoot from the nose of the ship
         const noseX = this.position.x + Math.cos(this.rotation) * 20;

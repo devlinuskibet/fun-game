@@ -6,6 +6,7 @@ import { Enemy } from '../entities/Enemy';
 import { Starfield } from '../systems/Starfield';
 import { ProceduralGeneration } from '../systems/ProceduralGeneration';
 import { ParticleSystem } from '../systems/ParticleSystem';
+import { audioManager } from '../systems/AudioManager';
 import { checkCircleCollision } from '../utils/Collision';
 import { Vector2 } from '../utils/Vector2';
 import { useGameStore } from '@/store/useGameStore';
@@ -87,10 +88,14 @@ export class GameLoop {
       return;
     }
 
-    this.player.update(dt, this.inputManager);
+    const worldMousePos = this.cameraPos.add(this.inputManager.mousePos);
+    this.player.update(dt, this.inputManager, worldMousePos, store.stats.speedMultiplier);
     
     this.player.shoot((pos, angle) => {
-      this.projectiles.push(new Projectile(pos.x, pos.y, angle, 800, false));
+      const p = new Projectile(pos.x, pos.y, angle, 800, false);
+      p.damage *= store.stats.damageMultiplier;
+      this.projectiles.push(p);
+      audioManager.playLaser();
     }, dt, this.inputManager);
 
     // Update projectiles
@@ -139,6 +144,7 @@ export class GameLoop {
       
       e.update(dt, this.player.position, (pos, angle) => {
         this.projectiles.push(new Projectile(pos.x, pos.y, angle, 800, true));
+        audioManager.playLaser();
       });
 
       // Check collision with player projectiles
@@ -153,6 +159,7 @@ export class GameLoop {
           if (e.health <= 0) {
             destroyed = true;
             this.particleSystem.emitExplosion(e.position.x, e.position.y, '#ef4444', 30);
+            audioManager.playExplosion();
             break;
           }
         }
@@ -183,6 +190,7 @@ export class GameLoop {
           if (a.health <= 0) {
             destroyed = true;
             this.particleSystem.emitExplosion(a.position.x, a.position.y, '#10b981', 20);
+            audioManager.playExplosion();
             break;
           }
         }

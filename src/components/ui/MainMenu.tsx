@@ -3,9 +3,15 @@
 import { motion } from 'framer-motion';
 import { useGameStore } from '@/store/useGameStore';
 import { Play, Settings, Trophy } from 'lucide-react';
+import { audioManager } from '@/game/systems/AudioManager';
 
 export default function MainMenu() {
   const setGameState = useGameStore((state) => state.setGameState);
+
+  const handleStart = () => {
+    audioManager.init();
+    setGameState('PLAYING');
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-transparent relative z-10">
@@ -28,8 +34,8 @@ export default function MainMenu() {
         className="flex flex-col gap-4 w-64"
       >
         <button
-          onClick={() => setGameState('PLAYING')}
-          className="glass-button flex items-center justify-center gap-3 py-4 px-6 rounded-lg text-lg font-semibold text-white tracking-wider hover:scale-105 transition-transform"
+          onClick={handleStart}
+          className="w-full glass-button flex items-center justify-center gap-3 py-4 rounded text-xl font-bold tracking-[0.2em] text-white hover:text-white hover:bg-white/10 transition-all duration-300"
         >
           <Play size={24} />
           START EXPEDITION
