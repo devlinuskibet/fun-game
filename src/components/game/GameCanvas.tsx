@@ -9,6 +9,8 @@ export default function GameCanvas() {
   const gameLoopRef = useRef<GameLoop | null>(null);
   const setGameState = useGameStore((state) => state.setGameState);
   const gameState = useGameStore((state) => state.gameState);
+  const health = useGameStore((state) => state.stats.health);
+  const prevHealth = useRef(health);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -54,6 +56,14 @@ export default function GameCanvas() {
       gameLoopRef.current?.stop();
     }
   }, [gameState]);
+
+  // Handle respawn reset
+  useEffect(() => {
+    if (prevHealth.current <= 0 && health > 0) {
+      gameLoopRef.current?.reset();
+    }
+    prevHealth.current = health;
+  }, [health]);
 
   return (
     <canvas

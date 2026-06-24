@@ -64,6 +64,18 @@ export class GameLoop {
     this.inputManager.destroy();
   }
 
+  public reset() {
+    this.player.position = new Vector2(0, 0);
+    this.player.velocity = new Vector2(0, 0);
+    this.player.acceleration = new Vector2(0, 0);
+    this.player.rotation = 0;
+    this.asteroids = [];
+    this.projectiles = [];
+    this.enemies = [];
+    this.cameraPos = new Vector2(0, 0);
+    this.particleSystem = new ParticleSystem();
+  }
+
   private loop = (time: number) => {
     // Delta time in seconds
     const dt = (time - this.lastTime) / 1000;
