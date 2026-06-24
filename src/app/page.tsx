@@ -4,6 +4,7 @@ import { useGameStore } from '@/store/useGameStore';
 import MainMenu from '@/components/ui/MainMenu';
 import GameCanvas from '@/components/game/GameCanvas';
 import HUD from '@/components/ui/HUD';
+import GameOver from '@/components/ui/GameOver';
 
 export default function Home() {
   const gameState = useGameStore((state) => state.gameState);
@@ -28,6 +29,9 @@ export default function Home() {
       {gameState === 'MENU' && (
         <div className="absolute inset-0 bg-black/60 z-[5]" />
       )}
+
+      {/* Game Over Screen */}
+      {gameState === 'GAME_OVER' && <GameOver />}
     </main>
   );
 }

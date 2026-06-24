@@ -2,8 +2,10 @@ import { InputManager } from './InputManager';
 import { Player } from '../entities/Player';
 import { Asteroid } from '../entities/Asteroid';
 import { Projectile } from '../entities/Projectile';
+import { Enemy } from '../entities/Enemy';
 import { Starfield } from '../systems/Starfield';
 import { ProceduralGeneration } from '../systems/ProceduralGeneration';
+import { ParticleSystem } from '../systems/ParticleSystem';
 import { checkCircleCollision } from '../utils/Collision';
 import { Vector2 } from '../utils/Vector2';
 import { useGameStore } from '@/store/useGameStore';
@@ -20,7 +22,10 @@ export class GameLoop {
   
   private asteroids: Asteroid[] = [];
   private projectiles: Projectile[] = [];
+  private enemies: Enemy[] = [];
+  
   private proceduralGen: ProceduralGeneration;
+  private particleSystem: ParticleSystem;
 
   // Camera focuses on player
   private cameraPos: Vector2;
@@ -39,6 +44,7 @@ export class GameLoop {
 
     this.starfield = new Starfield(canvas.width, canvas.height, 300);
     this.proceduralGen = new ProceduralGeneration();
+    this.particleSystem = new ParticleSystem();
   }
 
   public resize(width: number, height: number) {
@@ -72,23 +78,92 @@ export class GameLoop {
   };
 
   private update(dt: number) {
+    // If player is dead, skip updates
+    const store = useGameStore.getState();
+    if (store.stats.health <= 0) {
+      if (store.gameState !== 'GAME_OVER') {
+        store.setGameState('GAME_OVER');
+      }
+      return;
+    }
+
     this.player.update(dt, this.inputManager);
     
     this.player.shoot((pos, angle) => {
-      this.projectiles.push(new Projectile(pos.x, pos.y, angle));
+      this.projectiles.push(new Projectile(pos.x, pos.y, angle, 800, false));
     }, dt, this.inputManager);
 
     // Update projectiles
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const p = this.projectiles[i];
       p.update(dt);
-      if (p.life <= 0) {
+      
+      let destroyed = false;
+
+      // Check collision with player
+      if (p.isEnemy && checkCircleCollision(p.position, p.radius, this.player.position, 15)) {
+        let remainingDamage = p.damage;
+        
+        // Damage shields first
+        if (store.stats.shield > 0) {
+          if (store.stats.shield >= remainingDamage) {
+            store.updateStats({ shield: store.stats.shield - remainingDamage });
+            remainingDamage = 0;
+          } else {
+            remainingDamage -= store.stats.shield;
+            store.updateStats({ shield: 0 });
+          }
+          this.particleSystem.emitExplosion(p.position.x, p.position.y, '#06b6d4', 10); // Shield hit effect
+        }
+        
+        // Damage health
+        if (remainingDamage > 0) {
+          store.updateStats({ health: Math.max(0, store.stats.health - remainingDamage) });
+          this.particleSystem.emitExplosion(p.position.x, p.position.y, '#ef4444', 15); // Hull hit effect
+        }
+
+        destroyed = true;
+      }
+
+      if (destroyed || p.life <= 0) {
         this.projectiles.splice(i, 1);
       }
     }
 
     // Procedural Gen
-    this.proceduralGen.update(this.player.position, this.asteroids);
+    this.proceduralGen.update(this.player.position, this.asteroids, this.enemies);
+
+    // Update Enemies
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const e = this.enemies[i];
+      
+      e.update(dt, this.player.position, (pos, angle) => {
+        this.projectiles.push(new Projectile(pos.x, pos.y, angle, 800, true));
+      });
+
+      // Check collision with player projectiles
+      let destroyed = false;
+      for (let j = this.projectiles.length - 1; j >= 0; j--) {
+        const p = this.projectiles[j];
+        if (!p.isEnemy && checkCircleCollision(e.position, e.radius, p.position, p.radius)) {
+          e.health -= p.damage;
+          this.projectiles.splice(j, 1);
+          this.particleSystem.emitExplosion(p.position.x, p.position.y, '#f59e0b', 5);
+          
+          if (e.health <= 0) {
+            destroyed = true;
+            this.particleSystem.emitExplosion(e.position.x, e.position.y, '#ef4444', 30);
+            break;
+          }
+        }
+      }
+
+      if (destroyed) {
+        // Collect credits for destroying enemies
+        store.addCredits(50);
+        this.enemies.splice(i, 1);
+      }
+    }
 
     // Update asteroids and check collisions
     for (let i = this.asteroids.length - 1; i >= 0; i--) {
@@ -99,24 +174,28 @@ export class GameLoop {
       let destroyed = false;
       for (let j = this.projectiles.length - 1; j >= 0; j--) {
         const p = this.projectiles[j];
+        // Both player and enemy can shoot asteroids
         if (checkCircleCollision(a.position, a.radius, p.position, p.radius)) {
-          // Hit!
           a.health -= p.damage;
-          this.projectiles.splice(j, 1); // destroy projectile
+          this.projectiles.splice(j, 1); 
+          this.particleSystem.emitExplosion(p.position.x, p.position.y, '#9ca3af', 5);
           
           if (a.health <= 0) {
             destroyed = true;
+            this.particleSystem.emitExplosion(a.position.x, a.position.y, '#10b981', 20);
             break;
           }
         }
       }
       
       if (destroyed) {
-        // Collect resource
-        useGameStore.getState().updateInventory(a.resourceType, a.resourceYield);
+        store.updateInventory(a.resourceType, a.resourceYield);
         this.asteroids.splice(i, 1);
       }
     }
+
+    // Update particles
+    this.particleSystem.update(dt);
 
     // Update Camera to follow player smoothly or exactly
     // Here we make camera center on player exactly
@@ -141,13 +220,24 @@ export class GameLoop {
       a.draw(this.ctx);
     }
 
+    // Draw Enemies
+    for (const e of this.enemies) {
+      e.draw(this.ctx);
+    }
+
     // Draw Projectiles
     for (const p of this.projectiles) {
       p.draw(this.ctx);
     }
 
+    // Draw Particles
+    this.particleSystem.draw(this.ctx);
+
     // Draw Player
-    this.player.draw(this.ctx);
+    // Hide player if dead
+    if (useGameStore.getState().stats.health > 0) {
+      this.player.draw(this.ctx);
+    }
 
     this.ctx.restore();
   }
