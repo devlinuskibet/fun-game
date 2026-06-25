@@ -19,43 +19,29 @@ function replaceInFile(path, search, replace) {
 }
 
 try {
-  // --- Feature 3: Asteroid Score ---
-  replaceInFile('src/game/engine/GameLoop.ts', 
-    'store.updateInventory(a.resourceType, a.resourceYield);', 
-    'store.updateInventory(a.resourceType, a.resourceYield);\n        store.updateStats({ score: (store.stats.score || 0) + 10 });'
-  );
-  commit('gameplay: extract valuable score data from asteroid fragments');
-
-  // --- Feature 4: Enemy Score ---
-  replaceInFile('src/game/engine/GameLoop.ts', 
-    'store.addCredits(50);', 
-    'store.addCredits(50);\n        store.updateStats({ score: (store.stats.score || 0) + 100 });'
-  );
-  commit('gameplay: siphon combat points from destroyed drones');
-
-  // --- Feature 5: High Score save logic ---
-  replaceInFile('src/game/engine/GameLoop.ts', 
-    "store.setGameState('GAME_OVER');", 
-    "if ((store.stats.score || 0) > (store.stats.highScore || 0)) store.updateStats({ highScore: store.stats.score });\n        store.setGameState('GAME_OVER');"
-  );
-  commit('feat: persist historical high scores upon hull breach');
-
   // --- Feature 6: High Score on Main Menu ---
-  replaceInFile('src/components/ui/MainMenu.tsx',
-    'const setGameState = useGameStore((state) => state.setGameState);',
-    'const setGameState = useGameStore((state) => state.setGameState);\n  const highScore = useGameStore((state) => state.stats.highScore);'
-  );
+  // The first replace might have already succeeded in the previous run, so let's conditionally run it
+  let menuContent = fs.readFileSync('src/components/ui/MainMenu.tsx', 'utf8');
+  if (!menuContent.includes('const highScore = useGameStore((state) => state.stats.highScore);')) {
+    replaceInFile('src/components/ui/MainMenu.tsx',
+      'const setGameState = useGameStore((state) => state.setGameState);',
+      'const setGameState = useGameStore((state) => state.setGameState);\n  const highScore = useGameStore((state) => state.stats.highScore);'
+    );
+  }
   replaceInFile('src/components/ui/MainMenu.tsx', 
-    '<Trophy size={20} className="text-accent" />', 
-    '<Trophy size={20} className="text-accent" />\n            <span className="text-white/70 font-bold ml-2">High Score: {highScore || 0}</span>'
+    '<Trophy size={20} />', 
+    '<Trophy size={20} />\n          <span className="text-white/70 font-bold ml-2">High Score: {highScore || 0}</span>\n          '
   );
   commit('ui: engrave historical high scores in the main menu archive');
 
   // --- Feature 7: Score on Game Over ---
-  replaceInFile('src/components/ui/GameOver.tsx',
-    'const inventory = useGameStore((state) => state.inventory);',
-    'const inventory = useGameStore((state) => state.inventory);\n  const score = useGameStore((state) => state.stats.score);'
-  );
+  let goContent = fs.readFileSync('src/components/ui/GameOver.tsx', 'utf8');
+  if (!goContent.includes('const score = useGameStore((state) => state.stats.score);')) {
+    replaceInFile('src/components/ui/GameOver.tsx',
+      'const inventory = useGameStore((state) => state.inventory);',
+      'const inventory = useGameStore((state) => state.inventory);\n  const score = useGameStore((state) => state.stats.score);'
+    );
+  }
   replaceInFile('src/components/ui/GameOver.tsx', 
     '<span>Credits:</span>', 
     '<span>Score:</span>\n            <span className="text-white font-bold">{score || 0}</span>\n          </div>\n          <div className="flex justify-between text-white/90 font-mono mb-1">\n            <span>Credits:</span>'
@@ -88,7 +74,7 @@ try {
   commit('gfx: apply retro-futuristic cathode-ray tube visual filters');
 
   execSync('git push');
-  console.log('Successfully pushed remaining 8 commits!');
+  console.log('Successfully pushed remaining 5 commits!');
 } catch (e) {
   console.error(e);
 }

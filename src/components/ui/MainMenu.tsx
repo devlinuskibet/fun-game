@@ -7,6 +7,7 @@ import { audioManager } from '@/game/systems/AudioManager';
 
 export default function MainMenu() {
   const setGameState = useGameStore((state) => state.setGameState);
+  const highScore = useGameStore((state) => state.stats.highScore);
 
   const handleStart = () => {
     audioManager.init();
@@ -43,6 +44,8 @@ export default function MainMenu() {
 
         <button className="glass-panel flex items-center justify-center gap-3 py-3 px-6 rounded-lg text-md font-medium text-white/80 hover:bg-white/10 transition-colors">
           <Trophy size={20} />
+          <span className="text-white/70 font-bold ml-2">High Score: {highScore || 0}</span>
+          
           LEADERBOARD
         </button>
 
