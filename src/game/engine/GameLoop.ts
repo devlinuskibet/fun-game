@@ -95,6 +95,7 @@ export class GameLoop {
     const store = useGameStore.getState();
     if (store.stats.health <= 0) {
       if (store.gameState !== 'GAME_OVER') {
+        if ((store.stats.score || 0) > (store.stats.highScore || 0)) store.updateStats({ highScore: store.stats.score });
         store.setGameState('GAME_OVER');
       }
       return;
