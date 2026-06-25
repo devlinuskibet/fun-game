@@ -67,6 +67,10 @@ export default function HUD() {
 
         <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-2">
           <div className="flex justify-between items-center text-sm">
+            <span className="text-white/70 font-bold">Score</span>
+            <span className="text-accent font-mono font-bold">{stats.score}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm">
             <span className="text-white/70 font-bold">Credits</span>
             <span className="text-accent font-mono font-bold">{inventory.credits} ¢</span>
           </div>
