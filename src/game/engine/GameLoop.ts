@@ -104,6 +104,7 @@ export class GameLoop {
     const speedMult = store.stats.speedMultiplier ?? 1;
     const dmgMult = store.stats.damageMultiplier ?? 1;
 
+    store.updateStats({ timePlayed: (store.stats.timePlayed || 0) + dt });
     const worldMousePos = this.cameraPos.add(this.inputManager.mousePos);
     this.player.update(dt, this.inputManager, worldMousePos, speedMult);
     
