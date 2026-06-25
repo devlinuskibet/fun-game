@@ -19,62 +19,46 @@ function replaceInFile(path, search, replace) {
 }
 
 try {
-  // --- Feature 6: High Score on Main Menu ---
-  // The first replace might have already succeeded in the previous run, so let's conditionally run it
-  let menuContent = fs.readFileSync('src/components/ui/MainMenu.tsx', 'utf8');
-  if (!menuContent.includes('const highScore = useGameStore((state) => state.stats.highScore);')) {
-    replaceInFile('src/components/ui/MainMenu.tsx',
-      'const setGameState = useGameStore((state) => state.setGameState);',
-      'const setGameState = useGameStore((state) => state.setGameState);\n  const highScore = useGameStore((state) => state.stats.highScore);'
-    );
-  }
-  replaceInFile('src/components/ui/MainMenu.tsx', 
-    '<Trophy size={20} />', 
-    '<Trophy size={20} />\n          <span className="text-white/70 font-bold ml-2">High Score: {highScore || 0}</span>\n          '
-  );
-  commit('ui: engrave historical high scores in the main menu archive');
-
-  // --- Feature 7: Score on Game Over ---
-  let goContent = fs.readFileSync('src/components/ui/GameOver.tsx', 'utf8');
-  if (!goContent.includes('const score = useGameStore((state) => state.stats.score);')) {
-    replaceInFile('src/components/ui/GameOver.tsx',
-      'const inventory = useGameStore((state) => state.inventory);',
-      'const inventory = useGameStore((state) => state.inventory);\n  const score = useGameStore((state) => state.stats.score);'
-    );
-  }
-  replaceInFile('src/components/ui/GameOver.tsx', 
-    '<span>Credits:</span>', 
-    '<span>Score:</span>\n            <span className="text-white font-bold">{score || 0}</span>\n          </div>\n          <div className="flex justify-between text-white/90 font-mono mb-1">\n            <span>Credits:</span>'
-  );
-  commit('ui: taunt players with their final score upon destruction');
-
   // --- Feature 8: Time Played UI ---
-  replaceInFile('src/components/ui/HUD.tsx',
-    'export default function HUD() {',
-    'export default function HUD() {\n  const formatTime = (s: number) => `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,"0")}`;'
-  );
-  replaceInFile('src/components/ui/HUD.tsx',
-    '<h2 className="text-xl font-black text-white tracking-widest uppercase mb-4">Ship Status</h2>',
-    '<h2 className="text-xl font-black text-white tracking-widest uppercase mb-4">Ship Status</h2>\n        <div className="absolute top-4 right-6 text-white/50 font-mono text-sm">T+{formatTime(stats.timePlayed || 0)}</div>'
-  );
+  // The HUD formatTime was already successfully added in a previous script run? Wait, no, it failed BEFORE that.
+  let hudContent = fs.readFileSync('src/components/ui/HUD.tsx', 'utf8');
+  if (!hudContent.includes('const formatTime')) {
+    replaceInFile('src/components/ui/HUD.tsx',
+      'export default function HUD() {',
+      'export default function HUD() {\n  const formatTime = (s: number) => `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,"0")}`;'
+    );
+  }
+  
+  if (!hudContent.includes('T+{formatTime')) {
+    replaceInFile('src/components/ui/HUD.tsx',
+      '<div className="absolute inset-0 pointer-events-none z-20 p-6 flex flex-col justify-between">',
+      '<div className="absolute inset-0 pointer-events-none z-20 p-6 flex flex-col justify-between">\n      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/50 font-mono text-sm tracking-widest">T+{formatTime(stats.timePlayed || 0)}</div>'
+    );
+  }
   commit('feat: initialize chronometer for expedition time tracking');
 
   // --- Feature 9: Time Played Logic ---
-  replaceInFile('src/game/engine/GameLoop.ts', 
-    'const worldMousePos = this.cameraPos.add(this.inputManager.mousePos);', 
-    'store.updateStats({ timePlayed: (store.stats.timePlayed || 0) + dt });\n    const worldMousePos = this.cameraPos.add(this.inputManager.mousePos);'
-  );
+  let glContent = fs.readFileSync('src/game/engine/GameLoop.ts', 'utf8');
+  if (!glContent.includes('timePlayed: (store.stats.timePlayed')) {
+    replaceInFile('src/game/engine/GameLoop.ts', 
+      'const worldMousePos = this.cameraPos.add(this.inputManager.mousePos);', 
+      'store.updateStats({ timePlayed: (store.stats.timePlayed || 0) + dt });\n    const worldMousePos = this.cameraPos.add(this.inputManager.mousePos);'
+    );
+  }
   commit('physics: couple temporal flow to the main simulation loop');
 
   // --- Feature 10: CRT Visual effect ---
-  replaceInFile('src/app/page.tsx', 
-    '<GameCanvas />', 
-    '<GameCanvas />\n      <div className="pointer-events-none absolute inset-0 z-40 opacity-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />'
-  );
+  let pageContent = fs.readFileSync('src/app/page.tsx', 'utf8');
+  if (!pageContent.includes('bg-[linear-gradient')) {
+    replaceInFile('src/app/page.tsx', 
+      '<GameCanvas />', 
+      '<GameCanvas />\n      <div className="pointer-events-none absolute inset-0 z-40 opacity-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />'
+    );
+  }
   commit('gfx: apply retro-futuristic cathode-ray tube visual filters');
 
   execSync('git push');
-  console.log('Successfully pushed remaining 5 commits!');
+  console.log('Successfully pushed remaining 3 commits!');
 } catch (e) {
   console.error(e);
 }

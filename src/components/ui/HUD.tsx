@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { ShoppingCart } from 'lucide-react';
 
 export default function HUD() {
+  const formatTime = (s: number) => `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,"0")}`;
   const stats = useGameStore((state) => state.stats);
   const inventory = useGameStore((state) => state.inventory);
   const gameState = useGameStore((state) => state.gameState);
@@ -13,6 +14,7 @@ export default function HUD() {
 
   return (
     <div className="absolute inset-0 pointer-events-none z-20 p-6 flex flex-col justify-between">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/50 font-mono text-sm tracking-widest">T+{formatTime(stats.timePlayed || 0)}</div>
       {/* Top Left: Stats */}
       <motion.div 
         initial={{ opacity: 0, x: -50 }}
