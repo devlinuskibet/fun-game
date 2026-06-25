@@ -213,6 +213,7 @@ export class GameLoop {
       
       if (destroyed) {
         store.updateInventory(a.resourceType, a.resourceYield);
+        store.updateStats({ score: (store.stats.score || 0) + 10 });
         this.asteroids.splice(i, 1);
       }
     }
