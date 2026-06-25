@@ -183,6 +183,7 @@ export class GameLoop {
       if (destroyed) {
         // Collect credits for destroying enemies
         store.addCredits(50);
+        store.updateStats({ score: (store.stats.score || 0) + 100 });
         this.enemies.splice(i, 1);
       }
     }
