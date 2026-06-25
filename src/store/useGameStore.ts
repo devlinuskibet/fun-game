@@ -17,6 +17,9 @@ export interface PlayerStats {
   // Upgrades
   damageMultiplier: number;
   speedMultiplier: number;
+  score: number;
+  highScore: number;
+  timePlayed: number;
 }
 
 export interface Inventory {
@@ -58,11 +61,16 @@ export const useGameStore = create<GameStore>()(
         energy: 100,
         maxEnergy: 100,
         fuel: 100,
+      score: 0,
+      timePlayed: 0,
         maxFuel: 100,
         experience: 0,
         level: 1,
         damageMultiplier: 1,
         speedMultiplier: 1,
+        score: 0,
+        highScore: 0,
+        timePlayed: 0,
       },
       updateStats: (updates) =>
         set((state) => ({
