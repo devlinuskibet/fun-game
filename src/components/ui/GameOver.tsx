@@ -8,6 +8,7 @@ export default function GameOver() {
   const setGameState = useGameStore((state) => state.setGameState);
   const updateStats = useGameStore((state) => state.updateStats);
   const inventory = useGameStore((state) => state.inventory);
+  const score = useGameStore((state) => state.stats.score);
 
   const handleRestart = () => {
     // Reset stats
@@ -38,6 +39,10 @@ export default function GameOver() {
           <h3 className="text-sm text-white/50 font-bold tracking-widest mb-2 border-b border-white/10 pb-1">
             SALVAGED BEFORE DESTRUCTION
           </h3>
+          <div className="flex justify-between text-white/90 font-mono mb-1">
+            <span>Score:</span>
+            <span className="text-white font-bold">{score || 0}</span>
+          </div>
           <div className="flex justify-between text-white/90 font-mono mb-1">
             <span>Credits:</span>
             <span className="text-accent">{inventory.credits}</span>
