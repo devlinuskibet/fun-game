@@ -27,7 +27,7 @@ export class Asteroid {
     this.health = this.maxHealth;
 
     // Determine resources based on size/randomness
-    const types = ['Iron', 'Titanium', 'Crystal'];
+    const types = ['Iron', 'Titanium', 'Crystal', 'Gold'];
     this.resourceType = types[Math.floor(Math.random() * types.length)];
     this.resourceYield = Math.floor(radius / 5);
 
@@ -72,6 +72,10 @@ export class Asteroid {
       case 'Crystal':
         ctx.strokeStyle = '#d946ef'; // Fuchsia
         ctx.shadowColor = '#d946ef';
+        break;
+      case 'Gold':
+        ctx.strokeStyle = '#fbbf24'; // Gold/Amber
+        ctx.shadowColor = '#fbbf24';
         break;
       default:
         ctx.strokeStyle = '#ffffff';
