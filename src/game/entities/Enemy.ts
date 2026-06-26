@@ -6,6 +6,7 @@ export class Enemy {
   public radius: number = 15;
   public health: number = 40;
   public maxHealth: number = 40;
+  public scoreValue: number = 100;
   
   private speed: number = 150;
   private rotation: number = 0;
