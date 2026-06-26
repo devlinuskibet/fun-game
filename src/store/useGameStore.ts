@@ -61,8 +61,6 @@ export const useGameStore = create<GameStore>()(
         energy: 100,
         maxEnergy: 100,
         fuel: 100,
-      score: 0,
-      timePlayed: 0,
         maxFuel: 100,
         experience: 0,
         level: 1,
