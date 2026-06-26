@@ -5,6 +5,7 @@ interface Star {
   size: number;
   alpha: number;
   parallaxDepth: number; // 0 to 1, where 1 is furthest back (moves slowest)
+  color?: string;
 }
 
 export class Starfield {
@@ -31,6 +32,7 @@ export class Starfield {
         size: Math.random() * 1.5 + 0.5,
         alpha: Math.random() * 0.5 + 0.1,
         parallaxDepth: Math.random(),
+        color: Math.random() > 0.9 ? '#bfdbfe' : '#ffffff',
       });
     }
   }
@@ -53,6 +55,7 @@ export class Starfield {
       y = ((y % this.height) + this.height) % this.height;
 
       ctx.globalAlpha = star.alpha;
+      ctx.fillStyle = star.color || '#ffffff';
       ctx.beginPath();
       ctx.arc(x, y, star.size, 0, Math.PI * 2);
       ctx.fill();
