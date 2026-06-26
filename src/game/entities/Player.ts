@@ -14,6 +14,7 @@ export class Player {
   public velocity: Vector2;
   public acceleration: Vector2;
   public rotation: number = 0;
+  public score: number = 0;
 
   private topSpeed: number = 500; // pixels per second
   private thrustPower: number = 800;
