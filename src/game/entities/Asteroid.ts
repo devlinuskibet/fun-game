@@ -11,6 +11,7 @@ export class Asteroid {
   public maxHealth: number;
   public resourceType: string;
   public resourceYield: number;
+  public scoreValue: number;
 
   constructor(x: number, y: number, radius: number) {
     this.position = new Vector2(x, y);
@@ -25,6 +26,7 @@ export class Asteroid {
     
     this.maxHealth = radius * 2;
     this.health = this.maxHealth;
+    this.scoreValue = Math.floor(radius * 10);
 
     // Determine resources based on size/randomness
     const types = ['Iron', 'Titanium', 'Crystal', 'Gold'];
