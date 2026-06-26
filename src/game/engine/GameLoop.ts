@@ -185,7 +185,7 @@ export class GameLoop {
       if (destroyed) {
         // Collect credits for destroying enemies
         store.addCredits(50);
-        store.updateStats({ score: (store.stats.score || 0) + 100 });
+        store.updateStats({ score: (store.stats.score || 0) + e.scoreValue });
         this.enemies.splice(i, 1);
       }
     }
@@ -216,7 +216,7 @@ export class GameLoop {
       
       if (destroyed) {
         store.updateInventory(a.resourceType, a.resourceYield);
-        store.updateStats({ score: (store.stats.score || 0) + 10 });
+        store.updateStats({ score: (store.stats.score || 0) + a.scoreValue });
         this.asteroids.splice(i, 1);
       }
     }
